@@ -35,21 +35,24 @@ object Authentication extends Controller {
    * this implementation only puts username into the session which acts as
    * a successful login token to the system.
    */
-  def login = {
-    val remember = request.cookies.get("rememberme");
-    if (remember != null && remember.value.indexOf("-") > 0) {
-      val sign = remember.value.substring(0, remember.value.indexOf("-"));
-      val username = remember.value.substring(remember.value.indexOf("-") + 1);
-      if (Crypto.sign(username).equals(sign)) {
-        flash.put("remember", true);
-        flash.put("username", username);
-        session.put("username", username);
-        flash.keep("url");
-        redirectToOriginalURL()
-      }
-    }
-    flash.keep("url");
-    views.Login.html.login("Login")
+    def login = {
+	    val remember = request.cookies.get("rememberme");
+	    flash.keep("url");
+	    (remember != null && remember.value.indexOf("-") > 0) match {
+		      case true =>
+		      		val sign = remember.value.substring(0, remember.value.indexOf("-"));
+		      		val username = remember.value.substring(remember.value.indexOf("-") + 1);
+		      		(Crypto.sign(username).equals(sign)) match {
+			      		  case true =>
+			      		  		flash.put("remember", true);
+			      		  		flash.put("username", username);
+			      		  		session.put("username", username);
+			      		  		flash.keep("url");
+			      		  		redirectToOriginalURL()
+			      		  case false => views.Login.html.login("Login")
+		      		}
+		      case false => views.Login.html.login("Login")
+	    }
   }
 
   /**
